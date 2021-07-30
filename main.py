@@ -6,7 +6,7 @@ nl = "\n" # Save newline as variable since f-string cannot take backslash
 
 def main (argv):
 	NOTIME = False		
-	excersise, sets, reps = None, None, None
+	excersise, sets, reps = None, 1, None
 	
 	# Take args
 	for i in range(len(argv)):
@@ -40,6 +40,10 @@ def main (argv):
 	
 	# Init times table
 	times = ["x"] * sets
+
+	# Show info
+	msg = f"{excersise} - {sets}x{reps}"
+	print(f"{'='*len(msg)}\n{msg}\n{'='*len(msg)}")
 
 	# Take each time
 	if not NOTIME:
