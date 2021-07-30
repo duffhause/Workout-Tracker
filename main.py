@@ -46,7 +46,7 @@ def main (argv):
 		for i in range(sets):
 			input(f"Press [ENTER] to start set {i+1}")
 			start = time.time()
-			input(f"Press [ENTER] to end rep {i+1}")
+			input(f"Press [ENTER] to end set {i+1}")
 			end = time.time()
 			times[i] = (int(end-start))
 			print(f"Set {i+1} completed in {times[i]} seconds\n")
