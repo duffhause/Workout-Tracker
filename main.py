@@ -3,64 +3,106 @@ import time
 from datetime import datetime
 
 nl = "\n" # Save newline as variable since f-string cannot take backslash
+SAVEFILE = "record.csv"
 
-def main (argv):
-	NOTIME = False		
-	excersise, sets, reps = None, 1, None
-	
-	# Take args
-	for i in range(len(argv)):
-		try:
-			arg = argv[i].lower()
-			if arg == "-e":
-				excersise = argv[i+1]
-			elif arg == "-s":
-				sets = int(argv[i+1])
-			elif arg == "-r":
-				reps = int(argv[i+1])
-			elif arg == "-nt":
-				NOTIME = True
-		except IndexError:
-			print(f"Missing value for {arg}")
-			sys.exit()
-		except	ValueError:
-			print(f"Value given for {arg} is NaN")
-			sys.exit()
+class Workout ():
+	def SaveWorkout(self):
+		with open(SAVEFILE, "a+") as f:
+			f.write(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')},{self.excercise},{self.sets},{self.reps},")
+			for i in range(self.sets):
+				f.write(f"{self.times[i]}{',' if i < self.sets-1 else nl}")
+			f.close()
 
-	# Check args
-	if excersise == None:
-		print("Excersise not specified")
-		sys.exit()
-	elif sets == None:
-		print("Sets not specified")
-		sys.exit()
-	elif reps == None:
-		print("Reps not specified")
-		sys.exit()
-	
-	# Init times table
-	times = ["x"] * sets
-
-	# Show info
-	msg = f"{excersise} - {sets}x{reps}"
-	print(f"{'='*len(msg)}\n{msg}\n{'='*len(msg)}")
-
-	# Take each time
-	if not NOTIME:
-		for i in range(sets):
+	def GetTimes (self):
+		for i in range(self.sets):
 			input(f"Press [ENTER] to start set {i+1}")
 			start = time.time()
+
 			input(f"Press [ENTER] to end set {i+1}")
 			end = time.time()
-			times[i] = (int(end-start))
-			print(f"Set {i+1} completed in {times[i]} seconds\n")
+
+			self.times[i] = (int(end-start))
+			print(f"Set {i+1} completed in {self.times[i]} seconds\n")
 	
-	# Record data
-	with open("record.txt", "a+") as f:
-		f.write(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')},{excersise},{sets},{reps},")
-		for i in range(sets):
-			f.write(f"{times[i]}{',' if i < sets-1 else nl}")
-		f.close()
+
+	def __init__(self, argv, excerciseList):
+		self.excercise, self.sets, self.reps = None, None, None
+		self.ignoreTime = False
+
+		# Take args
+		for i in range(len(argv)):
+			arg = argv[i].lower()
+			try:
+				if arg == "-e":
+					excercise = argv[i+1]
+
+					if excercise.isnumeric():
+						excercise = int(excercise)
+						if len(excerciseList) < excercise - 1:
+							print(f"Excercise {excercise} is out of bounds")
+							sys.exit()
+						self.excercise = excerciseList[excercise]	# excercise from list
+					else:
+						self.excercise = excercise					# new excercise
+
+				elif arg == "-s":
+					self.sets = int(argv[i+1])
+
+				elif arg == "-r":
+					self.reps = int(argv[i+1])
+
+				elif arg == "-nt":
+					self.ignoreTime = True
+
+				elif arg == "-mr":
+					self.reps = "MAX"
+
+			except IndexError:
+				print(f"Missing value for {arg}")
+				sys.exit()
+			except	ValueError:
+				print(f"Value given for {arg} is NaN")
+				sys.exit()
+
+		# Check args
+		if self.excercise == None:
+			print("excercise not specified")
+			sys.exit()
+		if self.sets == None:
+			self.sets = 1
+		if self.reps == None:
+			print("Reps not specified")
+			sys.exit()
+
+		# Show brief
+		msg = f"{self.excercise} - {self.sets} x {self.reps}"
+		print(f"{'='*len(msg)}\n{msg}\n{'='*len(msg)}")
+
+		# Init times table
+		self.times = ["x"] * self.sets
+
+	
+def GetExcerciseList():
+	list = []
+	with open(SAVEFILE, "r") as f:
+		lines = f.readlines()
+		for line in lines:
+			excercise = line.split(",")[1]
+			if excercise not in list:
+				list.append(excercise)
+	return list
+
+
 
 if __name__ == "__main__":
-	main(sys.argv)
+	excerciseList = GetExcerciseList()
+	if "--list" in sys.argv or "-l" in sys.argv:
+		for i in range(len(excerciseList)):
+			print(f"{i}\t{excerciseList[i]}") 
+		sys.exit()
+
+	workout = Workout(sys.argv, excerciseList)
+	if not workout.ignoreTime:
+		workout.GetTimes()
+	workout.SaveWorkout()
+
